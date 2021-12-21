@@ -2,6 +2,7 @@
 using CoreIdentity.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -25,6 +26,31 @@ namespace CoreIdentity
                 opt.UseSqlServer(configuration["ConnectionStrings:DefaultConnectionString"]); //ConncetionString'i configuration araciligi ile appsettings.json'dan aliyoruz
             });
 
+
+            //Cookie Ayarlarimiz
+            services.ConfigureApplicationCookie(opt =>
+            {
+                opt.LoginPath = new PathString("/Home/Login"); //Kullanici üye olmadan, üye olmayanlarin erisebildigi sayfaya tiklarsa, Login sayfamiza yönlendirir
+                opt.LogoutPath = new PathString("/Home/Logout"); //
+
+                opt.Cookie = new CookieBuilder
+                {
+                    Name = "MyBlog", //cookie adimiz
+                    HttpOnly = false,//Client tarafinda cookie bilgisi okunmasin
+                    SameSite = SameSiteMode.Lax, // Lax: default olarak gelir. Anasitemiz üzerinden subdomaine ait bir sitemize tek bir cookie ile gecilmesine olanak verir.
+                                                //Strict : Bu mode mali,finansal uygulamalar icin secilir ve Siteler arasi istek sahtekarligina (Cross Site Request Forgery - CSRF/XSRF - Session Riding) karsi önlem olarak kullanilir. Bu sayede Client - Sunucu arasinda cookie'ye müdahale edilmesine izin vermez. Subdomanin yapisinda kullanilmaz.
+                    SecurePolicy = CookieSecurePolicy.SameAsRequest //Site canliya tasindiginda bu alan .Always olarak degistirilmelidir.!!!
+                    //Always : Browser, kullanicinin cookie'sini sadece  Https üzerinden bir istek geldiginde gönderir
+                    //SameAsRequest : Browser, kullanicinin cookie istegini hangi protokolden geldiyse ona o sekilde gönderir (Http den geldiyse http den, https den geldiyse https den)
+                    //None: Browser, protokole bakmadan tüm gelen isteklere http üzerinden gönderir
+                };
+                opt.SlidingExpiration = true; // Expiration süresi bitmedigi sürece kullanici hangi gün tekrar siteyi ziyaret ederse, Expiration süresi kadar üzerine süre eklenir
+                opt.ExpireTimeSpan = System.TimeSpan.FromDays(7); // cookie yasam süresi (60 gün sonra tekrar login olunmasi gerekli)
+                opt.AccessDeniedPath = new PathString("/Home/AccessDenied"); //Yetkisiz erisimde yönlendirilecek sayfa
+            });
+
+
+            //Identity Ayarlarimiz
             services.AddIdentity<AppUser, AppRole>(opt =>
             {
                 opt.Password.RequiredLength = 4; //sifre de rakam olsun mu? Test asamasinda kapatiyoruz, Default 6 karakter
@@ -37,7 +63,7 @@ namespace CoreIdentity
                 opt.User.AllowedUserNameCharacters = "abcçdefgğhıijklmnoöpqrsştuüvwxyzABCÇDEFGĞHIİJKLMNOÖPQRSŞTUÜVWXYZ0123456789-._@+$"; //Kullanici adinda hangi karakterler olsun
                 opt.User.RequireUniqueEmail = true; // ayni mail adresi ile kayda izin verilmemeli mi?
 
-            }).AddPasswordValidator<CustomPasswordValidator>().AddUserValidator<CustomUserValidator>().AddEntityFrameworkStores<AppIdentityDbContext>(); //AppIdentityDbContext sayesinde AppUser ve IdentityRole tablolarini Db de olusturacak.
+            }).AddPasswordValidator<CustomPasswordValidator>().AddUserValidator<CustomUserValidator>().AddErrorDescriber<CustomIdentityErrorDescriber>().AddEntityFrameworkStores<AppIdentityDbContext>(); //AppIdentityDbContext sayesinde AppUser ve IdentityRole tablolarini Db de olusturacak.
 
             //Service'lerimizin eklenecegi alan
             //services.AddMvc(option => option.EnableEndpointRouting = false); //Asp.Net Core 3.1
@@ -59,7 +85,7 @@ namespace CoreIdentity
             app.UseDeveloperExceptionPage(); //Sayfada bir hata alindiginda aciklayici bilgiler sunar.
             app.UseStatusCodePages(); //Herhangi bir content(icerik) dönmeyen saflarimizda bizi bilgilendirici yazilar dönmesini saglar
             app.UseStaticFiles(); //resim,js,css dosyalarimizin yüklenebilmesi icin eklenir
-            
+
             app.UseRouting(); // Authentication ve Authorization dan önce gelmeli
 
             app.UseAuthentication(); //Authorization dan önce gelmeli
