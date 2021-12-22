@@ -3,16 +3,19 @@ using CoreIdentity.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
+using SignInResult = Microsoft.AspNetCore.Identity.SignInResult;
 
 namespace CoreIdentity.Controllers
 {
     public class HomeController : Controller
     {
-        public UserManager<AppUser>  _userManager { get;}
+        public UserManager<AppUser> _userManager { get; }
+        public SignInManager<AppUser> _signInManager { get; }
 
-        public HomeController(UserManager<AppUser> userManager)
+        public HomeController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager)
         {
             _userManager = userManager;
+            _signInManager = signInManager;
         }
 
         public IActionResult Index()
@@ -20,9 +23,42 @@ namespace CoreIdentity.Controllers
             return View();
         }
 
-        public IActionResult LogIn()
+        [HttpGet]
+        public IActionResult LogIn(string ReturnUrl)
         {
+            TempData["ReturnUrl"] = ReturnUrl;
             return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> LogIn(LoginViewModel userLogin)
+        {
+            if (ModelState.IsValid)
+            {
+                AppUser user = await _userManager.FindByEmailAsync(userLogin.Email);
+
+                if (user != null)
+                {
+                    await _signInManager.SignOutAsync(); //Varsa cookie degeri silinsin
+
+                    SignInResult result = await _signInManager.PasswordSignInAsync(user, userLogin.Password, userLogin.RememberMe, false);
+                    //userLogin.RememberMe degeri true gelirse 7 günlük cookie(bizim belirledigimiz süre) ömrü gecerli olacak
+
+                    if (result.Succeeded)
+                    {
+                        if (TempData["ReturnUrl"]!=null)
+                        {
+                            return RedirectToAction(TempData["ReturnUrl"].ToString());
+                        }
+                        return RedirectToAction("Index", "Member");
+                    }
+                }
+                else
+                {
+                    ModelState.AddModelError("","Gecersiz email adresi veya sifresi"); //"": Summary alaninda cikacak mesaji belirtir. Kötü niyetli kullanicilarin messajda hangisinin yanlis oldugunu anlamamasi gereklidir.
+                }
+            }
+            return View(userLogin);
         }
 
         [HttpGet]

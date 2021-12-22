@@ -13,10 +13,17 @@
                 <input asp-for="Email" class="form-control"/>
                 <span asp-validation-for="Email" class="text-danger"></span>
             </div>
+            <br/>
             <div class="form-group">
                 <label asp-for="Password" class="control-label"></label>
                 <input asp-for="Password" class="form-control"/>
                 <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+            <br/>
+            <div class="form-group">
+                <label asp-for="RememberMe">
+                    <input asp-for="RememberMe" /> @Html.DisplayNameFor(m => m.RememberMe)
+                </label>
             </div>
             <br/>
             <div class="form-group">

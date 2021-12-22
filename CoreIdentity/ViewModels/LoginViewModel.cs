@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-
 namespace CoreIdentity.ViewModels
 {
     public class LoginViewModel
@@ -15,5 +14,8 @@ namespace CoreIdentity.ViewModels
         [DataType(DataType.Password)]
         [MinLength(4,ErrorMessage = "Sifreniz en az 4 karakterli olmalidir.")]
         public string Password { get; set; }
+
+        [Display(Name = "Beni Hatirla")]
+        public bool RememberMe { get; set; }
     }
 }
