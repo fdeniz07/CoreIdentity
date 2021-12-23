@@ -40,7 +40,7 @@ namespace CoreIdentity
                 opt.User.AllowedUserNameCharacters = "abcçdefgğhıijklmnoöpqrsştuüvwxyzABCÇDEFGĞHIİJKLMNOÖPQRSŞTUÜVWXYZ0123456789-._@+$"; //Kullanici adinda hangi karakterler olsun
                 opt.User.RequireUniqueEmail = true; // ayni mail adresi ile kayda izin verilmemeli mi?
 
-            }).AddPasswordValidator<CustomPasswordValidator>().AddUserValidator<CustomUserValidator>().AddErrorDescriber<CustomIdentityErrorDescriber>().AddEntityFrameworkStores<AppIdentityDbContext>(); //AppIdentityDbContext sayesinde AppUser ve IdentityRole tablolarini Db de olusturacak.
+            }).AddPasswordValidator<CustomPasswordValidator>().AddUserValidator<CustomUserValidator>().AddErrorDescriber<CustomIdentityErrorDescriber>().AddEntityFrameworkStores<AppIdentityDbContext>().AddDefaultTokenProviders(); //AppIdentityDbContext sayesinde AppUser ve IdentityRole tablolarini Db de olusturacak.
 
             //Service'lerimizin eklenecegi alan
             //services.AddMvc(option => option.EnableEndpointRouting = false); //Asp.Net Core 3.1
