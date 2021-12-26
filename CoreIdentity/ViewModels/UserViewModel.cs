@@ -12,7 +12,7 @@ namespace CoreIdentity.ViewModels
         public string PhoneNumber { get; set; }
 
         [Required(ErrorMessage = "Email adresi gereklidir.")]
-        [Display(Name = "Email Adresimiz")]
+        [Display(Name = "Email Adresiniz")]
         [EmailAddress(ErrorMessage ="Email adresiniz dogru formatta degil")]
         public string Email { get; set; }
 

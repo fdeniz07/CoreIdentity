@@ -9,7 +9,7 @@ namespace CoreIdentity.CustomValidations
             return new IdentityError()
             {
                 Code = "InvalidUserName",
-                Description = $"Bu {userName} kullanici adi  gecersizdir."
+                Description = $"Bu kullanici adi ({userName})  gecersizdir."
             };
         }
         
@@ -18,7 +18,7 @@ namespace CoreIdentity.CustomValidations
             return new IdentityError()
             {
                 Code = "DublicateUserName",
-                Description = $"Bu {userName} kullanici adi kullanilmaktadir"
+                Description = $"Bu kullanici adi ({userName}) zaten kullanilmaktadir"
             };
         }
 

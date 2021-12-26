@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace CoreIdentity
 {
@@ -50,7 +51,7 @@ namespace CoreIdentity
             services.ConfigureApplicationCookie(opt =>
             {
                 opt.LoginPath = new PathString("/Home/Login"); //Kullanici üye olmadan, üye olmayanlarin erisebildigi sayfaya tiklarsa, Login sayfamiza yönlendirir
-                opt.LogoutPath = new PathString("/Home/Logout"); //
+                opt.LogoutPath = new PathString("/Member/LogOut"); // MemberController'deki void türündeki LogOut metoduna gidiyor.
 
                 opt.Cookie = new CookieBuilder
                 {
@@ -81,7 +82,8 @@ namespace CoreIdentity
             //Test (Development Ortam Kodlari asagiya yazilir)
             //if (env.IsDevelopment())
             //{
-            //    app.UseDeveloperExceptionPage();
+            //    app.UseDeveloperExceptionPage();//Sayfada bir hata alindiginda aciklayici bilgiler sunar.
+            //    app.UseStatusCodePages(); //Herhangi bir content(icerik) dönmeyen saflarimizda bizi bilgilendirici yazilar dönmesini saglar
             //}
 
             app.UseDeveloperExceptionPage(); //Sayfada bir hata alindiginda aciklayici bilgiler sunar.
