@@ -66,7 +66,7 @@ namespace CoreIdentity
                 };
                 opt.SlidingExpiration = true; // Expiration süresi bitmedigi sürece kullanici hangi gün tekrar siteyi ziyaret ederse, Expiration süresi kadar üzerine süre eklenir
                 opt.ExpireTimeSpan = System.TimeSpan.FromDays(7); // cookie yasam süresi (60 gün sonra tekrar login olunmasi gerekli)
-                opt.AccessDeniedPath = new PathString("/Home/AccessDenied"); //Yetkisiz erisimde yönlendirilecek sayfa
+                opt.AccessDeniedPath = new PathString("/Member/AccessDenied"); //Üye bir kullanici yetkisiz sayfaya erismeye kalkarsa yönlendirilecek sayfa
             });
 
 

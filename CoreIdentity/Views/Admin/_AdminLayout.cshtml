@@ -11,7 +11,7 @@
     <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.js"></script>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="#">LOGO</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -20,10 +20,7 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link" aria-current="page" asp-controller="Member" asp-action="Index">Üye Anasayfa</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="btn btn-info" aria-current="page" asp-controller="Admin" asp-action="Index">Admin Anasayfa</a>
+                        <a class="nav-link" aria-current="page" asp-controller="Admin" asp-action="Index">Admin Anasayfa</a>
                     </li>
                 </ul>
             </div>
@@ -37,9 +34,9 @@
             </div>
             <div class="col-md-4">
                 <h3>Menü</h3>
-                <a class="btn btn-info btn-block" asp-action="PasswordChange" asp-controller="Member">Sifre Degistirme</a>
-                <a class="btn btn-info btn-block" asp-action="UserEdit" asp-controller="Member">Bilgi Güncelleme</a>
-                <a class="btn btn-info btn-block" asp-action="Logout" asp-controller="Member" asp-route-returnUrl="/Home/Index">Cikis Yap</a>
+                <a class="btn btn-danger btn-block" asp-action="Users" asp-controller="Admin">Üyeler</a>
+                <a class="btn btn-danger btn-block" asp-action="Roles" asp-controller="Admin">Roller</a>
+                <a class="btn btn-danger btn-block" asp-action="Logout" asp-controller="Member" asp-route-returnUrl="/Home/Index">Cikis Yap</a>
             </div>
         </div>
     </section>
