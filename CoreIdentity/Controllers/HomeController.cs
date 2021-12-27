@@ -8,16 +8,9 @@ using SignInResult = Microsoft.AspNetCore.Identity.SignInResult;
 
 namespace CoreIdentity.Controllers
 {
-    public class HomeController : Controller
+    public class HomeController : BaseController
     {
-        public UserManager<AppUser> _userManager { get; }
-        public SignInManager<AppUser> _signInManager { get; }
-
-        public HomeController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager)
-        {
-            _userManager = userManager;
-            _signInManager = signInManager;
-        }
+        public HomeController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager):base(userManager, signInManager) { }
 
         public IActionResult Index()
         {
@@ -122,10 +115,7 @@ namespace CoreIdentity.Controllers
                 }
                 else
                 {
-                    foreach (IdentityError item in result.Errors)
-                    {
-                        ModelState.AddModelError("", item.Description); //"" yazmamizin nedeni hatalari frontend tarafindaki asp-validation-summary kismina yani sayfanin en üstünde hatalari getirecektir. Biz "" yerine icerisine ilgili item'i yazabiliriz.
-                    }
+                    AddModelError(result);
                 }
             }
             return View(userViewModel); //Hatalari ekle tekrar kullanicinin girdigi bilgileri gönder
@@ -211,10 +201,7 @@ namespace CoreIdentity.Controllers
                 }
                 else
                 {
-                    foreach (var item in result.Errors)
-                    {
-                        ModelState.AddModelError("", item.Description);
-                    }
+                    AddModelError(result);
                 }
             }
             else

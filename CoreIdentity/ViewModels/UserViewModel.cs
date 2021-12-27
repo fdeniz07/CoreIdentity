@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
+using CoreIdentity.Enums;
 
 namespace CoreIdentity.ViewModels
 {
@@ -20,5 +22,17 @@ namespace CoreIdentity.ViewModels
         [Display(Name = "Sifre")]
         [DataType(DataType.Password)]
         public string Password { get; set; }
+
+        [Display(Name = "Sehir")]
+        public string City { get; set; }
+
+        public string Picture { get; set; }
+
+        [Display(Name = "Dogum Tarihi")]
+        [DataType(DataType.Date)]
+        public DateTime? BirthDay { get; set; }
+
+        [Display(Name = "Cinsiyet")]
+        public Gender Gender { get; set; }
     }
 }

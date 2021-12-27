@@ -1,27 +1,25 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.IO;
+using System.Threading.Tasks;
+using CoreIdentity.Enums;
 using CoreIdentity.Models;
 using CoreIdentity.ViewModels;
 using Mapster;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace CoreIdentity.Controllers
 {
     [Authorize] // Controller bazli kisitlama
-    public class MemberController : Controller
+    public class MemberController : BaseController
     {
-        public UserManager<AppUser> _userManager { get; }
-        public SignInManager<AppUser> _signInManager { get; }
-
-        public MemberController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager)
-        {
-            _userManager = userManager;
-            _signInManager = signInManager;
-        }
+        public MemberController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager):base(userManager, signInManager) { }
         public IActionResult Index()
         {
-            AppUser user = _userManager.FindByNameAsync(User.Identity.Name).Result; //Her kullanici icin bir kimlik karti olustusturulur (User.Identity...)
+            AppUser user = CurrentUser;
             UserViewModel userViewModel = user.Adapt<UserViewModel>(); //Mapster araciligi ile tablolar eslestirilir
 
 
@@ -31,25 +29,46 @@ namespace CoreIdentity.Controllers
         [HttpGet]
         public IActionResult UserEdit()
         {
-            AppUser user = _userManager.FindByNameAsync(User.Identity.Name).Result;
+            AppUser user = CurrentUser;
 
             UserViewModel userViewModel = user.Adapt<UserViewModel>();
+
+            ViewBag.Gender = new SelectList(Enum.GetNames(typeof(Gender))); //Enum tipindeki cinsiyetleri Dropdownlist icinde göstermek icin
 
             return View(userViewModel);
         }
 
         [HttpPost]
-        public async Task<IActionResult> UserEdit(UserViewModel model)
+        public async Task<IActionResult> UserEdit(UserViewModel model,IFormFile userPicture)
         {
             ModelState.Remove("Password"); // Modelimizden Sifre alanini cikartiyoruz. Sifre degistirme alanini baska action'da yapiyoruz.
 
+            ViewBag.Gender = new SelectList(Enum.GetNames(typeof(Gender))); //ilgili alanin post isleminden sonra tekrar dolu gelmesi icin yaziyoruz
+
             if (ModelState.IsValid)
             {
-                AppUser user = await _userManager.FindByNameAsync(User.Identity.Name);
+                AppUser user = CurrentUser;
+
+                if (userPicture!=null && userPicture.Length>0)
+                {
+                    var fileName = Guid.NewGuid().ToString() + Path.GetExtension(userPicture.FileName);//Ayni isimde resim olmamasi icin her resme bir guid degeri ekliyoruz
+
+                    var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/UserPicture", fileName); //DB'ye yazacagimiz Path'i belirtiyoruz ve ilgili dosyaninin olup olmadigini kontrol ediyoruz
+
+                    using (var stream = new FileStream(path, FileMode.Create))
+                    {
+                        await userPicture.CopyToAsync(stream); //ilgili dosyayi kopyaliyoruz
+
+                        user.Picture = "/UserPicture/" + fileName; //DB'ye yazacagimiz yolu kaydediyoruz
+                    }
+                }
 
                 user.UserName = model.UserName;
                 user.Email = model.Email;
                 user.PhoneNumber = model.PhoneNumber;
+                user.City = model.City;
+                user.BirthDay=model.BirthDay;
+                user.Gender= (int)model.Gender;
 
                 IdentityResult result = await _userManager.UpdateAsync(user);
 
@@ -63,10 +82,7 @@ namespace CoreIdentity.Controllers
                 }
                 else
                 {
-                    foreach (var item in result.Errors)
-                    {
-                        ModelState.AddModelError("",item.Description);
-                    }
+                    AddModelError(result);
                 }
             }
             return View(model);
@@ -91,7 +107,7 @@ namespace CoreIdentity.Controllers
         {
             if (ModelState.IsValid)
             {
-                AppUser user = _userManager.FindByNameAsync(User.Identity.Name).Result; //.Name alani cookie den geliyor (hangi hesaptan login olmus)
+                AppUser user = CurrentUser;
 
                 //eski sifreyi kontrol ediyoruz
                 bool exist = _userManager.CheckPasswordAsync(user, model.PasswordOld).Result;
