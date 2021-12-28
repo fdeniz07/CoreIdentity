@@ -1,12 +1,16 @@
-﻿using CoreIdentity.Models;
+﻿using System.Collections.Generic;
+using CoreIdentity.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
+using System.Threading.Tasks;
 using CoreIdentity.ViewModels;
 using Mapster;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CoreIdentity.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class AdminController : BaseController
     {
         public AdminController(UserManager<AppUser> userManager, RoleManager<AppRole> roleManager) : base(userManager, null, roleManager) { }
@@ -102,5 +106,60 @@ namespace CoreIdentity.Controllers
             return View(model);
         }
 
+        [HttpGet]
+        public IActionResult RolesAssign(string id)
+        {
+            TempData["userId"] = id;
+            AppUser user = _userManager.FindByIdAsync(id).Result; //id den gelen degere göre kullaniciyi buluyoruz
+
+            ViewBag.userName = user.UserName; //Kullanicinin adini aliyoruz
+
+            IQueryable<AppRole> roles = _roleManager.Roles; //Rollerin tamamini cekiyoruz
+
+            List<string> userRoles = _userManager.GetRolesAsync(user).Result as List<string>; //Kullanicinin sahip oldugu rolleri listeliyoruz
+
+            List<RoleAssignViewModel> roleAssignViewModels = new List<RoleAssignViewModel>();
+
+            foreach (var role in roles) //Kullanicinin varolan rolleri arasinda geziyoruz
+            {
+                RoleAssignViewModel roleAssign = new RoleAssignViewModel();
+
+                roleAssign.RoleId = role.Id;
+                roleAssign.RoleName = role.Name;
+
+                if (userRoles.Contains(role.Name))
+                {
+                    roleAssign.Exist=    true;
+                }
+                else
+                {
+                    roleAssign.Exist = false;
+                }
+
+                roleAssignViewModels.Add(roleAssign);
+            }
+
+            return View(roleAssignViewModels);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RolesAssign(List<RoleAssignViewModel> models) //CheckBox'lardan isaretli olanlarin listesini aliyoruz
+        {
+            AppUser user = _userManager.FindByIdAsync(TempData["userId"].ToString()).Result;
+
+            foreach (var item in models)
+            {
+                if (item.Exist) //check edildiyse ilgili rolü kullaniciya atiyoruz
+                {
+                    await _userManager.AddToRoleAsync(user,item.RoleName);
+                }
+                else //check kaldirildiysa ilgili rolü kullanicidan aliyoruz
+                {
+                  await  _userManager.RemoveFromRoleAsync(user, item.RoleName);
+                }
+            }
+
+            return RedirectToAction("Users");
+        }
     }
 }

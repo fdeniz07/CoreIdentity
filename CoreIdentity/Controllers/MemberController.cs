@@ -87,8 +87,7 @@ namespace CoreIdentity.Controllers
             }
             return View(model);
         }
-
-
+        
         public void LogOut()
         {
             _signInManager.SignOutAsync();
@@ -147,5 +146,19 @@ namespace CoreIdentity.Controllers
         {
             return View();
         }
+
+        [Authorize(Roles = "Admin,Editor")]
+        public IActionResult Editor()
+        {
+            return View();
+        }
+
+        [Authorize(Roles = "Admin,Manager")]
+        public IActionResult Manager()
+        {
+            return View();
+        }
+
+
     }
 }

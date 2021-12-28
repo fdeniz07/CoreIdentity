@@ -85,7 +85,7 @@ namespace CoreIdentity.Controllers
                 }
                 else
                 {
-                    ModelState.AddModelError("", "Bu email adresine kayitli kullanici bulunammaistir.");
+                    ModelState.AddModelError("", "Bu email adresine kayitli kullanici bulunamamistir.");
                 }
             }
             return View(userLogin);

@@ -1,0 +1,22 @@
+﻿@model List<RoleAssignViewModel>
+@{
+    ViewData["Title"] = "RolesAssign";
+    Layout = "~/Views/Admin/_AdminLayout.cshtml";
+}
+
+<h3>Kullaniciya Rol Atama (@ViewBag.userName)</h3>
+<hr/>
+
+<form asp-controller="Admin" asp-action="RolesAssign" method="post">
+    @for (int i = 0; i < Model.Count(); i++) @*For ile dönmemizin nedeni checkbox'lardan degerleri liste olarak alabilmek icin. Foreach mvc mimarisinde bu listeyi algilayamiyor*@
+    {
+        <div class="form-check">
+            <input asp-for="@Model[i].Exist" type="checkbox" class="form-check-input"/>
+            <label asp-for="@Model[i].RoleId" class="form-check-label">@Model[i].RoleName</label>
+            
+            <input asp-for="@Model[i].RoleName" type="hidden"/>
+            <input asp-for="@Model[i].RoleId" type="hidden"/>
+        </div>
+    }
+    <input class="btn btn-success" type="submit" value="Rol Ata"/>
+</form>

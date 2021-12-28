@@ -6,7 +6,7 @@
 <h3 class="text-center">Kullanici Bilgileri</h3>
 <div class="row">
     <div class="col-sm-3">
-        <img style="width: 165px" src="@Model.Picture"/>
+        <img style="width: 165px" src="@Model.Picture" />
     </div>
     <div class="col-sm-9">
         <table class="table table-bordered table-striped">
@@ -24,11 +24,30 @@
             </tr>
             <tr>
                 <th>City</th>
-                <td>@Model.City</td>
+                <td>
+                    @if (!String.IsNullOrEmpty(Model.City))
+                    {
+                        @Model.City
+                    }
+                    else
+                    {
+                        <span>belirtilmemis</span>
+                    }
+                </td>
+
             </tr>
             <tr>
                 <th>Dogum Tarihi</th>
-                <td>@Model.BirthDay.Value.ToShortDateString()</td>
+                <td>
+                    @if (Model.BirthDay != null)
+                    {
+                        @Model.BirthDay?.ToShortDateString() @*? anlami, bu deger bos gelirse uygulamamiz patlamaz*@
+                    }
+                    else
+                    {
+                        <span>belirtilmemis</span>
+                    }
+                </td>
             </tr>
             <tr>
                 <th>Cinsiyet</th>
