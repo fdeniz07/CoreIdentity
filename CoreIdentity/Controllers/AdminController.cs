@@ -25,6 +25,15 @@ namespace CoreIdentity.Controllers
             return View(_userManager.Users.ToList());
         }
 
+
+        public IActionResult Claims()
+        {
+
+            return View(User.Claims.ToList()); // Cookie den gelen User bilgileri listelenecek
+        }
+
+
+
         [HttpGet]
         public IActionResult RoleCreate()
         {
