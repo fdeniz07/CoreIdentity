@@ -9,14 +9,14 @@
 <table class="table table-bordered table-striped table-responsive">
     <tr>
         <th>Kim</th>
-        <th>Dagitici</th>
-        <th>Adi</th>
-        <th>Deger</th>
+        <th>Dağıtıcı</th>
+        <th>Ad</th>
+        <th>Değer</th>
     </tr>
     @foreach (System.Security.Claims.Claim item in Model)
     {
         <tr>
-            <td>@item.Subject</td>
+            <td>@item.Subject.Name</td>
             <td>@item.Issuer</td>
             <td>@item.Type</td>
             <td>@item.Value</td>

@@ -159,6 +159,10 @@ namespace CoreIdentity.Controllers
             return View();
         }
 
-
+        [Authorize(Policy = "AnkaraPolicy")]
+        public IActionResult AnkaraPage()
+        {
+            return View();
+        }
     }
 }

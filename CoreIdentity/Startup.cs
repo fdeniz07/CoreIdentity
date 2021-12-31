@@ -1,5 +1,6 @@
 ﻿using CoreIdentity.CustomValidations;
 using CoreIdentity.Models;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -26,6 +27,16 @@ namespace CoreIdentity
             {
                 opt.UseSqlServer(configuration["ConnectionStrings:DefaultConnectionString"]); //ConncetionString'i configuration araciligi ile appsettings.json'dan aliyoruz
             });
+
+            //Claim Based Authorization Ayarlarimiz
+            services.AddAuthorization(opt =>
+            {
+                opt.AddPolicy("AnkaraPolicy", policy =>
+                {
+                    policy.RequireClaim("city", "ankara");
+                });
+            });
+
 
 
             //Identity Ayarlarimiz
@@ -69,6 +80,7 @@ namespace CoreIdentity
                 opt.AccessDeniedPath = new PathString("/Member/AccessDenied"); //Üye bir kullanici yetkisiz sayfaya erismeye kalkarsa yönlendirilecek sayfa
             });
 
+            services.AddScoped<IClaimsTransformation, ClaimProvider.ClaimProvider>(); //Claim islemlerimiz icin bu dönüsümü yapiyor
 
             services.AddControllersWithViews().AddRazorRuntimeCompilation(); //(AddRazorRuntimeCompilation()) Bu sayede backend de yapilan degisiklerde tekrar tekrar uygulamayi derlememize ihtiyac kalmiyor. Yani frontend deki gibi kaydettikten sonra uygulamadaki degisiklikleri görebiliriz.
         }
