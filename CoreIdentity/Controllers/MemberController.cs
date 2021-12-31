@@ -142,8 +142,21 @@ namespace CoreIdentity.Controllers
             return View(model);
         }
 
-        public IActionResult AccessDenied()
+        public IActionResult AccessDenied(string returnUrl)
         {
+            if (returnUrl.Contains("ViolencePage"))
+            {
+                ViewBag.message = "Erişmeye çalıştığınız sayfa şiddet videoları içerdiğinden dolayı 15 yaşından büyük olmanız gerekmektedir";
+            }
+            else if (returnUrl.Contains("AnkaraPage"))
+            {
+                ViewBag.message = "Bu sayfaya sadece şehir alanı ankara olan kullanıcılar erişebilir";
+            }
+            else
+            {
+                ViewBag.message = "Bu sayfadaki içeriklere erişim yetkiniz yoktur.";
+            }
+
             return View();
         }
 
@@ -161,6 +174,12 @@ namespace CoreIdentity.Controllers
 
         [Authorize(Policy = "AnkaraPolicy")]
         public IActionResult AnkaraPage()
+        {
+            return View();
+        }
+
+        [Authorize(Policy = "ViolencePolicy")]
+        public IActionResult ViolencePage()
         {
             return View();
         }

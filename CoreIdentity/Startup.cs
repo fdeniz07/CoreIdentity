@@ -35,9 +35,13 @@ namespace CoreIdentity
                 {
                     policy.RequireClaim("city", "ankara");
                 });
+                opt.AddPolicy("ViolencePolicy", policy =>
+                {
+                    policy.RequireClaim("violence"); //istersek key alanini yazar, value alanini belirtmeyebiliriz
+                });
             });
 
-
+            services.AddScoped<IClaimsTransformation, ClaimProvider.ClaimProvider>(); //Claim islemlerimiz icin bu dönüsümü yapiyor
 
             //Identity Ayarlarimiz
             services.AddIdentity<AppUser, AppRole>(opt =>
@@ -80,7 +84,7 @@ namespace CoreIdentity
                 opt.AccessDeniedPath = new PathString("/Member/AccessDenied"); //Üye bir kullanici yetkisiz sayfaya erismeye kalkarsa yönlendirilecek sayfa
             });
 
-            services.AddScoped<IClaimsTransformation, ClaimProvider.ClaimProvider>(); //Claim islemlerimiz icin bu dönüsümü yapiyor
+           
 
             services.AddControllersWithViews().AddRazorRuntimeCompilation(); //(AddRazorRuntimeCompilation()) Bu sayede backend de yapilan degisiklerde tekrar tekrar uygulamayi derlememize ihtiyac kalmiyor. Yani frontend deki gibi kaydettikten sonra uygulamadaki degisiklikleri görebiliriz.
         }
