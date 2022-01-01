@@ -1,6 +1,7 @@
 ﻿using CoreIdentity.CustomValidations;
 using CoreIdentity.Models;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -8,7 +9,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 
 namespace CoreIdentity
 {
@@ -29,6 +29,8 @@ namespace CoreIdentity
             });
 
             //Claim Based Authorization Ayarlarimiz
+            services.AddTransient<IAuthorizationHandler, ExpireDateExchangeHandler>();
+
             services.AddAuthorization(opt =>
             {
                 opt.AddPolicy("AnkaraPolicy", policy =>
@@ -38,6 +40,10 @@ namespace CoreIdentity
                 opt.AddPolicy("ViolencePolicy", policy =>
                 {
                     policy.RequireClaim("violence"); //istersek key alanini yazar, value alanini belirtmeyebiliriz
+                });
+                opt.AddPolicy("ExchangePolicy", policy =>
+                {
+                    policy.AddRequirements(new ExpireDateExchangeRequirement());
                 });
             });
 
@@ -80,7 +86,7 @@ namespace CoreIdentity
                     //None: Browser, protokole bakmadan tüm gelen isteklere http üzerinden gönderir
                 };
                 opt.SlidingExpiration = true; // Expiration süresi bitmedigi sürece kullanici hangi gün tekrar siteyi ziyaret ederse, Expiration süresi kadar üzerine süre eklenir
-                opt.ExpireTimeSpan = System.TimeSpan.FromDays(7); // cookie yasam süresi (60 gün sonra tekrar login olunmasi gerekli)
+                opt.ExpireTimeSpan = System.TimeSpan.FromDays(7); // cookie yasam süresi (7 gün sonra tekrar login olunmasi gerekli)
                 opt.AccessDeniedPath = new PathString("/Member/AccessDenied"); //Üye bir kullanici yetkisiz sayfaya erismeye kalkarsa yönlendirilecek sayfa
             });
 

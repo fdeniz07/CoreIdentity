@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using CoreIdentity.Enums;
 using CoreIdentity.Models;
@@ -152,6 +153,10 @@ namespace CoreIdentity.Controllers
             {
                 ViewBag.message = "Bu sayfaya sadece şehir alanı ankara olan kullanıcılar erişebilir";
             }
+            else if (returnUrl.Contains("Exchange"))
+            {
+                ViewBag.message = "30 günlük ücretsiz deneme hakkiniz sona ermistir.";
+            }
             else
             {
                 ViewBag.message = "Bu sayfadaki içeriklere erişim yetkiniz yoktur.";
@@ -180,6 +185,29 @@ namespace CoreIdentity.Controllers
 
         [Authorize(Policy = "ViolencePolicy")]
         public IActionResult ViolencePage()
+        {
+            return View();
+        }
+
+        public async Task<IActionResult> ExchangeRedirect() //Claim'i DB ye ekleyecegimiz alan.
+        {
+            bool result = User.HasClaim(x => x.Type == "ExpireDateExchange"); // ExpireDateExchange isminde bir Claim'in olup olmadigini kontrol ediyoruz
+
+            if (!result) // Eger böyle bir claim yoksa yeni bir claim ekliyoruz
+            {
+                Claim ExpireDateExchange = new Claim("ExpireDateExchange", DateTime.Now.AddDays(30).ToShortDateString(),
+                    ClaimValueTypes.String, "Internal"); //Claim olusturuyoruz
+
+                await _userManager.AddClaimAsync(CurrentUser, ExpireDateExchange); //Ilgili kullaniciya bu claim'i atiyoruz
+                await _signInManager.SignOutAsync(); // Kullaniciyi arka planda cikartiyoruz. Bunun nedeni cookie bilgilerinin hemen güncellenmesi.
+                await _signInManager.SignInAsync(CurrentUser, true); // Burada kullaniciyi arka planda oturum aciyoruz. True degeri ile cookie süresinin saklanma süresini yeniliyoruz. Ancak bu durumu kullanici farketmeyecektir
+            }
+
+            return RedirectToAction("Exchange");
+        }
+
+        [Authorize(Policy = "ExchangePolicy")]
+        public IActionResult Exchange() // Ücretli ya da ilk 30 günlük deneme alani
         {
             return View();
         }
