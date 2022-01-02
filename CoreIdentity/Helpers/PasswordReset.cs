@@ -4,18 +4,18 @@ namespace CoreIdentity.Helpers
 {
     public static class PasswordReset
     {
-        public static void PasswordResetSendEmail(string link)
+        public static void PasswordResetSendEmail(string link,string email)
         {
             MailMessage mail = new MailMessage();
 
             SmtpClient smtpClient = new SmtpClient("mail.denizfatih.com");
 
             mail.From = new MailAddress("blog@denizfatih.com");
-            mail.To.Add("fdeniz07@gmail.com");
+            mail.To.Add(email);
 
-            mail.Subject = $"www.denizfatih.com::Sifre sifirlama";
-            mail.Body="<h2>Sifrenizi yenilemek icin lütfen asagidaki linke tiklayiniz.</h2><hr/>";
-            mail.Body += $"<a href='{link}'>sifre yenileme linki</a>";
+            mail.Subject = $"www.denizfatih.com::Şifre sıfırlama";
+            mail.Body="<h2>Şifrenizi yenilemek için lütfen aşağiıaki linke tıklayınız.</h2><hr/>";
+            mail.Body += $"<a href='{link}'>şifre yenileme linki</a>";
             mail.IsBodyHtml = true;
             smtpClient.Port = 8889;
             smtpClient.Credentials = new System.Net.NetworkCredential("blog@denizfatih.com", "$Blog_2021!");

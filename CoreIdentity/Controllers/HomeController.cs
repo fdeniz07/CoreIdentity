@@ -10,7 +10,7 @@ namespace CoreIdentity.Controllers
 {
     public class HomeController : BaseController
     {
-        public HomeController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager):base(userManager, signInManager) { }
+        public HomeController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager) : base(userManager, signInManager) { }
 
         public IActionResult Index()
         {
@@ -39,11 +39,16 @@ namespace CoreIdentity.Controllers
                 {
                     if (await _userManager.IsLockedOutAsync(user))
                     {
-                        ModelState.AddModelError("", "Hesabiniz bir süreligine kilitlenmistir.Lütfen sonra tekrar deneyiniz.");
+                        ModelState.AddModelError("", "Hesabiniz bir süreligine kilitlenmistir.Lütfen daha sonra tekrar deneyiniz.");
 
                         return View(userLogin); //Hatalardan arindirilmis bir sekilde sayfayi tekrar yüklüyoruz
                     }
 
+                    if (_userManager.IsEmailConfirmedAsync(user).Result == false) //Kullanicinin, hesabi email dogrulamasi ile aktif edilip edilmediginin konrtolü yapiliyor
+                    {
+                        ModelState.AddModelError("","Email adresiniz onaylanmamistir. Lütfen e-postanizi kontrol ediniz.");
+                        return View(userLogin);
+                    }
 
                     await _signInManager.SignOutAsync(); //Varsa cookie degeri silinsin
 
@@ -111,6 +116,17 @@ namespace CoreIdentity.Controllers
 
                 if (result.Succeeded) // Kayit olduktan sonra kullaniciyi login ekranina gönderip, bilgilerinin tekrar girilmesi en güvenli yoldur
                 {
+                    string confirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+
+                    string link = Url.Action("ConfirmEmail", "Home", new
+                    {
+                        userId = user.Id,
+                        token = confirmationToken
+                    }, protocol: HttpContext.Request.Scheme
+                    );
+
+                    Helpers.EmailConfirmation.SendEmail(link, user.Email);
+
                     return RedirectToAction("Login", "Home");
                 }
                 else
@@ -151,7 +167,7 @@ namespace CoreIdentity.Controllers
                     }, HttpContext.Request.Scheme);
                     //www.denizfatih.com/Home/ResetPasswordConfirm?userId=fdsfhdsj&token=dfsjdkgfd
 
-                    Helpers.PasswordReset.PasswordResetSendEmail(passwordResetLink); //Helper sinifindaki metodumuz
+                    Helpers.PasswordReset.PasswordResetSendEmail(passwordResetLink, user.Email); //Helper sinifindaki metodumuz
 
                     ViewBag.status = "success";
                     TempData["durum"] = true.ToString();
@@ -207,6 +223,23 @@ namespace CoreIdentity.Controllers
             else
             {
                 ModelState.AddModelError("", "Bir hata meydana gelmistir. Lütfen daha sonra tekrar deneyiniz");
+            }
+            return View();
+        }
+
+        public async Task<IActionResult> ConfirmEmail(string userId, string token)
+        {
+            var user = await _userManager.FindByIdAsync(userId); //Ilgili user'i kontrol ediyoruz
+
+            IdentityResult result = await _userManager.ConfirmEmailAsync(user, token); //Kullanici ve token bilgisini geldikten sonra DB de ilgili alani true yapiyoruz
+
+            if (result.Succeeded)
+            {
+                ViewBag.status = "Email adresiniz onaylanmistir. Login ekranindan giris yapabilirsiniz.";
+            }
+            else
+            {
+                ViewBag.status = "Bir hata meydana geldi. Lütfen daha sonra tekrar deneyiniz.";
             }
             return View();
         }
