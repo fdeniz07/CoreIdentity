@@ -49,6 +49,14 @@ namespace CoreIdentity
 
             services.AddScoped<IClaimsTransformation, ClaimProvider.ClaimProvider>(); //Claim islemlerimiz icin bu dönüsümü yapiyor
 
+            //Sosyal Medya Login islemleri
+            services.AddAuthentication().AddFacebook(opt =>
+            {
+                opt.AppId = configuration["Authentication:Facebook:AppId"];
+                opt.AppSecret = configuration["Authentication:Facebook:AppSecret"];
+            });
+
+
             //Identity Ayarlarimiz
             services.AddIdentity<AppUser, AppRole>(opt =>
             {

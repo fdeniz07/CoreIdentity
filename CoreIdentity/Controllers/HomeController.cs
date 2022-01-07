@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Security.Claims;
 using CoreIdentity.Models;
 using CoreIdentity.ViewModels;
 using Microsoft.AspNetCore.Identity;
@@ -46,7 +47,7 @@ namespace CoreIdentity.Controllers
 
                     if (_userManager.IsEmailConfirmedAsync(user).Result == false) //Kullanicinin, hesabi email dogrulamasi ile aktif edilip edilmediginin konrtolü yapiliyor
                     {
-                        ModelState.AddModelError("","Email adresiniz onaylanmamistir. Lütfen e-postanizi kontrol ediniz.");
+                        ModelState.AddModelError("", "Email adresiniz onaylanmamistir. Lütfen e-postanizi kontrol ediniz.");
                         return View(userLogin);
                     }
 
@@ -242,6 +243,82 @@ namespace CoreIdentity.Controllers
                 ViewBag.status = "Bir hata meydana geldi. Lütfen daha sonra tekrar deneyiniz.";
             }
             return View();
+        }
+
+        public IActionResult FacebookLogin(string ReturnUrl)
+        {
+            string redirectUrl = Url.Action("ExternalResponse", "Home", new { ReturnUrl = ReturnUrl }); //Bir url belirtiyoruz. Bu url kullanici facebook da dogrulandiktan sonra yönlenecegi HomeController icerisindeki action da olacak.
+
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties("Facebook", redirectUrl); //Kullanici facebook sayfasina gönderiyoruz, login isleminden sonra geri dönecegi url'i belirtiyoruz.
+
+
+            return new ChallengeResult("Facebook", properties); //ChallengeResult: icerisine ne alirsa, kullaniciyi oraya yönlendirir.
+        }
+
+        public async Task<IActionResult> ExternalResponse(string ReturnUrl = "/") //Kullaniciyi facebook sayfasindaki dogrulamadan sonra karsilacagi alani yaziyoruz. "/" anasayfa anlamina gelir. Ancak dogrulama basarili ise zaten oradan da Admin sayfasina yönlenecektir.
+        {
+            ExternalLoginInfo info = await _signInManager.GetExternalLoginInfoAsync();
+
+            if (info == null) //Kullanici bilgileri bossa, LogIn sayfasina yönlendiriyoruz
+            {
+                return RedirectToAction("LogIn");
+            }
+            else
+            {
+                Microsoft.AspNetCore.Identity.SignInResult result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, true); //DB deki UserLogin tablosunda kullanici daha önce giris yaptiysa bilgileri mevcuttur. Biz burada bunun kontrolünü yapiyoruz. Ayrica SignInResult nesnesi bizde oldugundan cakismamasi icin Identity yapisindan geleni kullanabilmek icin ilgili namespace'i giriyoruz.
+
+                if (result.Succeeded)
+                {
+                    return RedirectToAction(ReturnUrl);
+                }
+                else
+                {
+                    AppUser user = new AppUser();
+
+                    user.Email = info.Principal.FindFirst(ClaimTypes.Email).Value;
+
+                    string ExternalUserId = info.Principal.FindFirst(ClaimTypes.NameIdentifier).Value;
+
+                    if (info.Principal.HasClaim(x => x.Type == ClaimTypes.Name))
+                    {
+                        string userName = info.Principal.FindFirst(ClaimTypes.Name).Value;
+
+                        userName = userName.Replace(' ', '-').ToLower() + ExternalUserId.Substring(0, 5).ToString();
+
+                        user.UserName = userName;
+                    }
+                    else
+                    {
+                        user.UserName = info.Principal.FindFirst(ClaimTypes.Email).Value;
+                    }
+
+
+                    IdentityResult createResult = await _userManager.CreateAsync(user);
+
+                    if (createResult.Succeeded)
+                    {
+                        IdentityResult loginResult = await _userManager.AddLoginAsync(user, info);
+
+                        if (loginResult.Succeeded)
+                        {
+                            await _signInManager.SignInAsync(user, true);
+                            return RedirectToAction(ReturnUrl);
+                        }
+                        else
+                        {
+                            AddModelError(loginResult);
+                        }
+                    }
+                    else
+                    {
+                        AddModelError(createResult);
+                    }
+
+                }
+
+                return RedirectToAction("Error");
+
+            }
         }
     }
 }
