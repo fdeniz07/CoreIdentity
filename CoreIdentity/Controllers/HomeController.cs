@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 using CoreIdentity.Models;
 using CoreIdentity.ViewModels;
@@ -257,9 +259,9 @@ namespace CoreIdentity.Controllers
 
         public async Task<IActionResult> ExternalResponse(string ReturnUrl = "/") //Kullaniciyi facebook sayfasindaki dogrulamadan sonra karsilacagi alani yaziyoruz. "/" anasayfa anlamina gelir. Ancak dogrulama basarili ise zaten oradan da Admin sayfasina yönlenecektir.
         {
-            ExternalLoginInfo info = await _signInManager.GetExternalLoginInfoAsync();
+            ExternalLoginInfo info = await _signInManager.GetExternalLoginInfoAsync(); //Kullanicinin ilgili sosyal medya platformuna ait bilgileri getiriyoruz
 
-            if (info == null) //Kullanici bilgileri bossa, LogIn sayfasina yönlendiriyoruz
+            if (info == null) //Kullanici bilgileri bossa^ya da yanlissa, LogIn sayfasina yönlendiriyoruz
             {
                 return RedirectToAction("LogIn");
             }
@@ -267,42 +269,45 @@ namespace CoreIdentity.Controllers
             {
                 Microsoft.AspNetCore.Identity.SignInResult result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, true); //DB deki UserLogin tablosunda kullanici daha önce giris yaptiysa bilgileri mevcuttur. Biz burada bunun kontrolünü yapiyoruz. Ayrica SignInResult nesnesi bizde oldugundan cakismamasi icin Identity yapisindan geleni kullanabilmek icin ilgili namespace'i giriyoruz.
 
-                if (result.Succeeded)
+                if (result.Succeeded) //Kullanici daha önce ilgili sosyal medya hesabi ile giris yapmis mi?
                 {
-                    return RedirectToAction(ReturnUrl);
+                    return Redirect(ReturnUrl);
                 }
-                else
+                else //eger kullanici ilk defa sosyal medya hesabi ile giris yapiyorsa
                 {
-                    AppUser user = new AppUser();
+                    AppUser user = new AppUser(); // bir kullanici olusturuyoruz
 
-                    user.Email = info.Principal.FindFirst(ClaimTypes.Email).Value;
+                    user.Email = info.Principal.FindFirst(ClaimTypes.Email).Value; //Claim lerde email'i bulup user'in email'ine atiyoruz
 
-                    string ExternalUserId = info.Principal.FindFirst(ClaimTypes.NameIdentifier).Value;
+                    string ExternalUserId = info.Principal.FindFirst(ClaimTypes.NameIdentifier).Value; //Claim lerden kullanicinin ilgili sosyal medya id'sini aliyoruz
 
-                    if (info.Principal.HasClaim(x => x.Type == ClaimTypes.Name))
+                    if (info.Principal.HasClaim(x => x.Type == ClaimTypes.Name)) //Burada biz claim üzerinde gelen kullanicinin sosyal medyadaki adi ve soyadindan bir user olusturacagiz
                     {
-                        string userName = info.Principal.FindFirst(ClaimTypes.Name).Value;
+                        string userName = info.Principal.FindFirst(ClaimTypes.Name).Value; //Claim üzerinden adi soyadini aliyoruz
 
-                        userName = userName.Replace(' ', '-').ToLower() + ExternalUserId.Substring(0, 5).ToString();
+                        userName = userName.Replace(' ', '-').ToLower() + ExternalUserId.Substring(0, 5).ToString();// ayni ad soyad'a ait kullanici varsa kendimize göte bir isimlendirme yapiyoruz. (kullanici adi soyadindaki boslugu '-' ile degistiriyoruz,kücük harfe cevirip, sosyal medyadaki id sinin ilk 5 degerini sonuna ekliyoruz ki ileride karmasa yasanmasin)
 
-                        user.UserName = userName;
+                        user.UserName = userName; //sosyal medya hesabindan alinan username bilgisini, bizim db deki users tablosundaki username kismina atiyoruz.
                     }
                     else
                     {
-                        user.UserName = info.Principal.FindFirst(ClaimTypes.Email).Value;
+                        user.UserName = info.Principal.FindFirst(ClaimTypes.Email).Value; // sosyal medyadan kullanici adi soyadini alamazsak, email adresini username olarak aliyoruz.
                     }
 
 
-                    IdentityResult createResult = await _userManager.CreateAsync(user);
+                    IdentityResult createResult = await _userManager.CreateAsync(user); // bir result olusturuyoruz
 
-                    if (createResult.Succeeded)
+                    if (createResult.Succeeded) // result basarili ise
                     {
-                        IdentityResult loginResult = await _userManager.AddLoginAsync(user, info);
+                        IdentityResult loginResult = await _userManager.AddLoginAsync(user, info); // Db deki UserLogins tablomuzu dolduruyoruz ki, Identity yapisi kullanicinin hangi sosyal medyadan geldigini anlasin ve buradan da bir result dönüyoruz
 
-                        if (loginResult.Succeeded)
+                        if (loginResult.Succeeded) // result basarili ise
                         {
-                            await _signInManager.SignInAsync(user, true);
-                            return RedirectToAction(ReturnUrl);
+                            //await _signInManager.SignInAsync(user, true); // giris islemi yapiyor, cookie süresini aktif ediyoruz. Biz burada sosyal medya hesabindan gelen kullaniciyi normal kullanici gibi kaydettigimiz icin, claims icerisinde hangi kullanici nereden gelmis ayirt edemiyoruz.
+
+                            await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, true); //Artik bir kullanicinin hangi platformdan geldigini anlayabilecegiz
+
+                            return Redirect(ReturnUrl); //ilgili sayfaya yönlendiriyoruz
                         }
                         else
                         {
@@ -315,10 +320,17 @@ namespace CoreIdentity.Controllers
                     }
 
                 }
+                List<string> errors = ModelState.Values.SelectMany(x => x.Errors).Select(y => y.ErrorMessage).ToList();
 
-                return RedirectToAction("Error");
+                return View("Error", errors);
 
+                //return RedirectToAction("Error"); // Eger bir hata olursa kullaniciyi error sayfamiza yönlendiriryoruz
             }
+        }
+
+        public IActionResult Error()
+        {
+            return View();
         }
     }
 }

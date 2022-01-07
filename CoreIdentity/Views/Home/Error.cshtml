@@ -1,0 +1,16 @@
+﻿@model List<string>
+@{
+    ViewData["Title"] = "Error";
+}
+
+<h1>Hata meydana geldi</h1>
+<hr />
+<div class="alert alert-danger">
+    <ul>
+        @foreach (var item in Model)
+        {
+            <li>@item</li>
+        }
+    </ul>
+</div>
+
