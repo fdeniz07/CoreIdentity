@@ -247,6 +247,15 @@ namespace CoreIdentity.Controllers
             return View();
         }
 
+        public IActionResult GoogleLogin(string ReturnUrl)
+        {
+            string redirectUrl = Url.Action("ExternalResponse", "Home", new { ReturnUrl = ReturnUrl }); //Bir url belirtiyoruz. Bu url kullanici google da dogrulandiktan sonra yönlenecegi HomeController icerisindeki action da olacak.
+
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties("Google", redirectUrl); //Kullanici google sayfasina gönderiyoruz, login isleminden sonra geri dönecegi url'i belirtiyoruz.
+
+            return new ChallengeResult("Google", properties); //ChallengeResult: icerisine ne alirsa, kullaniciyi oraya yönlendirir.
+        }
+
         public IActionResult FacebookLogin(string ReturnUrl)
         {
             string redirectUrl = Url.Action("ExternalResponse", "Home", new { ReturnUrl = ReturnUrl }); //Bir url belirtiyoruz. Bu url kullanici facebook da dogrulandiktan sonra yönlenecegi HomeController icerisindeki action da olacak.
@@ -256,6 +265,7 @@ namespace CoreIdentity.Controllers
 
             return new ChallengeResult("Facebook", properties); //ChallengeResult: icerisine ne alirsa, kullaniciyi oraya yönlendirir.
         }
+
 
         public async Task<IActionResult> ExternalResponse(string ReturnUrl = "/") //Kullaniciyi facebook sayfasindaki dogrulamadan sonra karsilacagi alani yaziyoruz. "/" anasayfa anlamina gelir. Ancak dogrulama basarili ise zaten oradan da Admin sayfasina yönlenecektir.
         {

@@ -54,6 +54,10 @@ namespace CoreIdentity
             {
                 opt.AppId = configuration["Authentication:Facebook:AppId"];
                 opt.AppSecret = configuration["Authentication:Facebook:AppSecret"];
+            }).AddGoogle(opt =>
+            {
+                opt.ClientId = configuration["Authentication:Google:ClientID"];
+                opt.ClientSecret = configuration["Authentication:Google:ClientSecret"];
             });
 
 
