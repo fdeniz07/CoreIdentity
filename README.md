@@ -1,5 +1,7 @@
 # CoreIdentity
 
+
+
 ##  Topics in this Project:
 
 - Asp.Net Core 5 Identity  - <img src="https://banner2.cleanpng.com/20180318/wwe/kisspng-check-mark-computer-icons-royalty-free-clip-art-blue-check-mark-5aae2bc6a7d722.9474025515213639106875.jpg" width=25px height=15px/>
