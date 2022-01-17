@@ -266,6 +266,15 @@ namespace CoreIdentity.Controllers
             return new ChallengeResult("Facebook", properties); //ChallengeResult: icerisine ne alirsa, kullaniciyi oraya yönlendirir.
         }
 
+        public IActionResult MicrosoftLogin(string ReturnUrl)
+        {
+            string redirectUrl = Url.Action("ExternalResponse", "Home", new { ReturnUrl = ReturnUrl }); //Bir url belirtiyoruz. Bu url kullanici Microsoft da dogrulandiktan sonra yönlenecegi HomeController icerisindeki action da olacak.
+
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties("Microsoft", redirectUrl); //Kullanici Microsoft sayfasina gönderiyoruz, login isleminden sonra geri dönecegi url'i belirtiyoruz.
+
+
+            return new ChallengeResult("Microsoft", properties); //ChallengeResult: icerisine ne alirsa, kullaniciyi oraya yönlendirir.
+        }
 
         public async Task<IActionResult> ExternalResponse(string ReturnUrl = "/") //Kullaniciyi facebook sayfasindaki dogrulamadan sonra karsilacagi alani yaziyoruz. "/" anasayfa anlamina gelir. Ancak dogrulama basarili ise zaten oradan da Admin sayfasina yönlenecektir.
         {
@@ -304,38 +313,51 @@ namespace CoreIdentity.Controllers
                         user.UserName = info.Principal.FindFirst(ClaimTypes.Email).Value; // sosyal medyadan kullanici adi soyadini alamazsak, email adresini username olarak aliyoruz.
                     }
 
+                    AppUser user2 = await _userManager.FindByEmailAsync(user.Email); //Ayni mail'e ait kullanicini var mi?
 
-                    IdentityResult createResult = await _userManager.CreateAsync(user); // bir result olusturuyoruz
-
-                    if (createResult.Succeeded) // result basarili ise
+                    if (user2 == null) // Eger sistemde ayni mail adresine sahip baska bir kullanicinin kontrolünü yapiyoruz
                     {
-                        IdentityResult loginResult = await _userManager.AddLoginAsync(user, info); // Db deki UserLogins tablomuzu dolduruyoruz ki, Identity yapisi kullanicinin hangi sosyal medyadan geldigini anlasin ve buradan da bir result dönüyoruz
+                        IdentityResult createResult = await _userManager.CreateAsync(user); // bir result olusturuyoruz
 
-                        if (loginResult.Succeeded) // result basarili ise
+                        if (createResult.Succeeded) // result basarili ise
                         {
-                            //await _signInManager.SignInAsync(user, true); // giris islemi yapiyor, cookie süresini aktif ediyoruz. Biz burada sosyal medya hesabindan gelen kullaniciyi normal kullanici gibi kaydettigimiz icin, claims icerisinde hangi kullanici nereden gelmis ayirt edemiyoruz.
+                            IdentityResult loginResult = await _userManager.AddLoginAsync(user, info); // Db deki UserLogins tablomuzu dolduruyoruz ki, Identity yapisi kullanicinin hangi sosyal medyadan geldigini anlasin ve buradan da bir result dönüyoruz
 
-                            await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, true); //Artik bir kullanicinin hangi platformdan geldigini anlayabilecegiz
+                            if (loginResult.Succeeded) // result basarili ise
+                            {
+                                //await _signInManager.SignInAsync(user, true); // giris islemi yapiyor, cookie süresini aktif ediyoruz. Biz burada sosyal medya hesabindan gelen kullaniciyi normal kullanici gibi kaydettigimiz icin, claims icerisinde hangi kullanici nereden gelmis ayirt edemiyoruz.
 
-                            return Redirect(ReturnUrl); //ilgili sayfaya yönlendiriyoruz
+                                await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, true); //Artik bir kullanicinin hangi platformdan geldigini anlayabilecegiz
+
+                                return Redirect(ReturnUrl); //ilgili sayfaya yönlendiriyoruz
+                            }
+                            else
+                            {
+                                AddModelError(loginResult);
+                            }
                         }
                         else
                         {
-                            AddModelError(loginResult);
+                            AddModelError(createResult);
                         }
                     }
+
                     else
                     {
-                        AddModelError(createResult);
+                        IdentityResult loginResult = await _userManager.AddLoginAsync(user2, info); // Eger ayni email adresine sahip bir kullanici varsa user2 degerini Db deki UserLogins tablomuzu dolduruyoruz. Users tablosuna kaydetmiyoruz, aksi durumda identity yapisindan dolayi hata verecektir.
+
+                        await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, true); //Artik bir kullanicinin hangi platformdan geldigini anlayabilecegiz
+
+                        return Redirect(ReturnUrl); //ilgili sayfaya yönlendiriyoruz
                     }
-
                 }
-                List<string> errors = ModelState.Values.SelectMany(x => x.Errors).Select(y => y.ErrorMessage).ToList();
 
-                return View("Error", errors);
-
-                //return RedirectToAction("Error"); // Eger bir hata olursa kullaniciyi error sayfamiza yönlendiriryoruz
             }
+            List<string> errors = ModelState.Values.SelectMany(x => x.Errors).Select(y => y.ErrorMessage).ToList();
+
+            return View("Error", errors);
+
+            //return RedirectToAction("Error"); // Eger bir hata olursa kullaniciyi error sayfamiza yönlendiriryoruz
         }
 
         public IActionResult Error()
@@ -344,3 +366,4 @@ namespace CoreIdentity.Controllers
         }
     }
 }
+

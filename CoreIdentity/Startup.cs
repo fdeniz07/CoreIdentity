@@ -58,6 +58,10 @@ namespace CoreIdentity
             {
                 opt.ClientId = configuration["Authentication:Google:ClientID"];
                 opt.ClientSecret = configuration["Authentication:Google:ClientSecret"];
+            }).AddMicrosoftAccount(opt =>
+            {
+                opt.ClientId = configuration["Authentication:Microsoft:ClientID"];
+                opt.ClientSecret = configuration["Authentication:Microsoft:ClientSecret"];
             });
 
 
