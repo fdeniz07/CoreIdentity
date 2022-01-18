@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CoreIdentity.Migrations
 {
     [DbContext(typeof(AppIdentityDbContext))]
-    [Migration("20211226030213_AddColumnsOnUser")]
-    partial class AddColumnsOnUser
+    [Migration("20220118194258_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
