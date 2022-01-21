@@ -167,5 +167,32 @@ namespace CoreIdentity.Controllers
 
             return RedirectToAction("Users");
         }
+
+        [HttpGet]
+        public async Task<IActionResult> ResetUserPassword(string id)
+        {
+            AppUser user = await _userManager.FindByIdAsync(id);
+
+            PasswordResetByAdminViewModel model = new PasswordResetByAdminViewModel();
+            model.UserId = user.Id;
+
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ResetUserPassword(PasswordResetByAdminViewModel model)
+        {
+            AppUser user = await _userManager.FindByIdAsync(model.UserId); //Modelden ilgili UserId'yi aliyoruz
+
+            string token = await _userManager.GeneratePasswordResetTokenAsync(user); // Kendimiz bir token olusturuyoruz
+
+            await _userManager.ResetPasswordAsync(user, token, model.NewPassword); // Sifre degistirme islemini yapiyoruz
+
+            await _userManager.UpdateSecurityStampAsync(user); // Kullaniciyi yeniden giris yapmaya zorluyoruz
+
+            //Securitystamp degerini update yapmazsak, kullanici eski sifresi ile sitemizde dolasmaya devam eder. Ne zaman cikis yaparsa, tekrar o zaman tekrar yeni sifreyle girmek zorunda kalir. Eger yukaridaki gibi biz bu degeri update edersek, kullanici otomatik olarak sitemize geldiginde login ekranina yönlendirilecektir.
+
+            return RedirectToAction("Users"); //Sonrasinda Üyeler sayfamiza kullaniciyi yönlendiriyoruz
+        }
     }
 }
