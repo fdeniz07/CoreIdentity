@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using CoreIdentity.Enums;
@@ -17,7 +18,7 @@ namespace CoreIdentity.Controllers
     [Authorize] // Controller bazli kisitlama
     public class MemberController : BaseController
     {
-        public MemberController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager):base(userManager, signInManager) { }
+        public MemberController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager) : base(userManager, signInManager) { }
         public IActionResult Index()
         {
             AppUser user = CurrentUser;
@@ -40,7 +41,7 @@ namespace CoreIdentity.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> UserEdit(UserViewModel model,IFormFile userPicture)
+        public async Task<IActionResult> UserEdit(UserViewModel model, IFormFile userPicture)
         {
             ModelState.Remove("Password"); // Modelimizden Sifre alanini cikartiyoruz. Sifre degistirme alanini baska action'da yapiyoruz.
 
@@ -50,7 +51,18 @@ namespace CoreIdentity.Controllers
             {
                 AppUser user = CurrentUser;
 
-                if (userPicture!=null && userPicture.Length>0)
+                string phone = _userManager.GetPhoneNumberAsync(user).Result; //Kullanicinin daha önce kayitli oldugu telefon numarasini aliyoruz
+
+                if (phone != model.PhoneNumber) // Girilen telefon no eskisinden farkliysa
+                {
+                    if (_userManager.Users.Any(u => u.PhoneNumber == model.PhoneNumber)) // Yeni girilen telefon numarasinin baskasi tarafindan kullanilirliginin kontrol edilmesi
+                    {
+                        ModelState.AddModelError("", "Bu telefon numarası başka üye tarafından kullanılmaktadır.");
+                        return View(model); // Eger ayni telefon numarasi baskasi tarafindan kullaniliyorsa, formdaki bilgilerin kaybolmamasi icin ViewModeli geri dönüyoruz
+                    }
+                }
+
+                if (userPicture != null && userPicture.Length > 0)
                 {
                     var fileName = Guid.NewGuid().ToString() + Path.GetExtension(userPicture.FileName);//Ayni isimde resim olmamasi icin her resme bir guid degeri ekliyoruz
 
@@ -68,8 +80,8 @@ namespace CoreIdentity.Controllers
                 user.Email = model.Email;
                 user.PhoneNumber = model.PhoneNumber;
                 user.City = model.City;
-                user.BirthDay=model.BirthDay;
-                user.Gender= (int)model.Gender;
+                user.BirthDay = model.BirthDay;
+                user.Gender = (int)model.Gender;
 
                 IdentityResult result = await _userManager.UpdateAsync(user);
 
@@ -88,7 +100,7 @@ namespace CoreIdentity.Controllers
             }
             return View(model);
         }
-        
+
         public void LogOut()
         {
             _signInManager.SignOutAsync();

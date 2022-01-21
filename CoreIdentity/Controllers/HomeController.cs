@@ -110,6 +110,12 @@ namespace CoreIdentity.Controllers
         {
             if (ModelState.IsValid)
             {
+                if (_userManager.Users.Any(u=>u.PhoneNumber==userViewModel.PhoneNumber))
+                {
+                    ModelState.AddModelError("","Bu telefon numarasi kayitlidir.");
+                    return View(userViewModel);
+                }
+                
                 AppUser user = new AppUser();
                 user.UserName = userViewModel.UserName;
                 user.Email = userViewModel.Email;
