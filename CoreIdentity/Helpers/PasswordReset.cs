@@ -8,17 +8,17 @@ namespace CoreIdentity.Helpers
         {
             MailMessage mail = new MailMessage();
 
-            SmtpClient smtpClient = new SmtpClient("mail.denizfatih.com");
+            SmtpClient smtpClient = new SmtpClient("mail.fatihdeniz.com");
 
-            mail.From = new MailAddress("blog@denizfatih.com");
+            mail.From = new MailAddress("blog@fatihdeniz.com");
             mail.To.Add(email);
 
-            mail.Subject = $"www.denizfatih.com::Şifre sıfırlama";
+            mail.Subject = $"www.fatihdeniz.com::Şifre sıfırlama";
             mail.Body="<h2>Şifrenizi yenilemek için lütfen aşağiıaki linke tıklayınız.</h2><hr/>";
             mail.Body += $"<a href='{link}'>şifre yenileme linki</a>";
             mail.IsBodyHtml = true;
             smtpClient.Port = 8889;
-            smtpClient.Credentials = new System.Net.NetworkCredential("blog@denizfatih.com", "$Blog_2021!");
+            smtpClient.Credentials = new System.Net.NetworkCredential("blog@fatihdeniz.com", "$Blog_2021!");
 
             smtpClient.Send(mail);
         }

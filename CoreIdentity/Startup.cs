@@ -27,7 +27,7 @@ namespace CoreIdentity
             {
                 //opt.UseSqlServer(configuration["ConnectionStrings:DefaultConnectionString"]); //ConncetionString'i configuration araciligi ile appsettings.json'dan aliyoruz (local)
 
-                opt.UseSqlServer(configuration["ConnectionStrings:DefaultMyAspNetConnectionString"]); //canli
+                opt.UseSqlServer(configuration["ConnectionStrings:DefaultConnectionString"]); //canli
             });
 
             //Claim Based Authorization Ayarlarimiz
